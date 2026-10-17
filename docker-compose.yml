@@ -1,0 +1,55 @@
+#run backend + database together
+
+#version of docker-compose
+version: '3.9' 
+# define services for the application
+services:
+
+  api:
+  # build the api service from the Dockerfile in the current directory
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DATABASE_URL: postgres://user:password@db:5432/website_builder
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 7d
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      CLOUDFRONT_DOMAIN: ${CLOUDFRONT_DOMAIN}
+      CLOUDFRONT_DISTRIBUTION_ID: ${CLOUDFRONT_DISTRIBUTION_ID}
+      CLIENT_URL: ${CLIENT_URL}
+      
+    depends_on:
+    # wait for the db service to be healthy before starting the api service
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+# define the database service , Ce bloc configure le conteneur de votre base de données relationnelle.
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: website_builder
+      # Sauvegarde les données de la base sur votre disque dur pour ne rien perdre si le conteneur est supprimé.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d website_builder"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+
+  #pgdata : Déclare un volume nommé géré par Docker.
+  #C'est ici que sont stockées de manière persistante les tables et les données de votre base PostgreSQL.
