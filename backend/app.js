@@ -21,7 +21,17 @@ app.use(helmet()); //Injects HTTP security headers.
 app.use(morgan('dev'));
 
 // CORS — only allow your frontend URL
-app.use(cors({ origin: process.env.CLIENT_URL }));
+app.use(cors({
+  origin: function (origin, callback) {
+    // Autorise les requêtes sans origine (comme Postman) ou venant de vercel.app
+    if (!origin || origin.endsWith('.vercel.app') || origin === process.env.CLIENT_URL) {
+      callback(null, true);
+    } else {
+      callback(new Error('Non autorisé par CORS'));
+    }
+  },
+  credentials: true
+}));
 
 // Parse JSON bodies
 app.use(express.json());
