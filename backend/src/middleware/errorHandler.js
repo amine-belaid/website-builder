@@ -1,4 +1,12 @@
+ const Sentry = require('@sentry/node');
+
 module.exports = (err, req, res, next) => {
+Sentry.captureException(err);   // ← sends to Sentry dashboard
+    console.error(err.stack);
+    res.status(err.status || 500).json({
+      error: err.message || 'Internal server error'
+    });
+
   console.error(err.stack);
 
   // Sequelize validation errors
